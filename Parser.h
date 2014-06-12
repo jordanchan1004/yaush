@@ -11,6 +11,10 @@
 
 using namespace std;
 
-int parser(list<char*>* word_list, list<Command*>* command_list);
+extern list<char*> word_list;
+
+extern list<Command*> command_list;
+
+int parser();
 
 #endif

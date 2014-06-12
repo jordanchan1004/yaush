@@ -15,6 +15,16 @@
 
 using namespace std;
 
-int cmd_execute(list<Command*>* command_list, const char* line_read, Job* fg_job, list<Job*>* bg_jobs);
+extern char* line_read;
+
+extern list<Command*> command_list;
+
+extern Job* fg_job;
+
+extern list<Job*> bg_jobs;
+
+int cmd_execute();
+
+int check_bg_list();
 
 #endif

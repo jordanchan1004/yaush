@@ -12,6 +12,9 @@ using namespace std;
 
 #define SEPARATOR ' '
 
-int lexer(char* line, list<char*>* word_list);
+extern char* line_read;
+extern list<char*> word_list;
+
+int lexer();
 
 #endif

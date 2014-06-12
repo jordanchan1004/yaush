@@ -1,13 +1,13 @@
 #include "Lexer.h"
 
-int lexer(char* line, list<char*>* word_list)
+int lexer()
 {
-	char* pos_pre = line;
+	char* pos_pre = line_read;
 	char* pos;
 	char* word;
 	int word_len;
 
-	word_list->clear();
+	word_list.clear();
 
 	while(*pos_pre == SEPARATOR)// skip SEPARATOR at the beginning
 	{
@@ -34,7 +34,7 @@ int lexer(char* line, list<char*>* word_list)
 		}
 		strncpy(word, pos_pre, word_len);// copy
 		word[word_len] = '\0';// add end to the word
-		word_list->push_back(word);// add the word to the list
+		word_list.push_back(word);// add the word to the list
 		pos_pre = pos;// renew the pos_pre
 		while(*pos_pre == SEPARATOR)// skip the separator just behind the separator
 		{
@@ -43,7 +43,7 @@ int lexer(char* line, list<char*>* word_list)
 	}
 
 	// log print
-	for(list<char*>::iterator iter=word_list->begin();iter!=word_list->end();iter++)
+	for(list<char*>::iterator iter=word_list.begin();iter!=word_list.end();iter++)
 	{
 		log_debug("%s",*iter);
 	}

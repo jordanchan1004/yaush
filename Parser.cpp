@@ -1,22 +1,22 @@
 #include "Parser.h"
 
-int parser(list<char*>* word_list, list<Command*>* command_list)
+int parser()
 {
-	if(word_list->empty())// no words
+	if(word_list.empty())// no words
 	{
-		command_list->clear();// clear and return
+		command_list.clear();// clear and return
 		return(-1);
 	}
 
-	list<char*>::iterator iter = word_list->begin();
+	list<char*>::iterator iter = word_list.begin();
 	list<char*> temp_list;
 	Command* command = NULL;
 	int num;
 	char* temp_string;
 
-	command_list->clear();// clear the command list
+	command_list.clear();// clear the command list
 
-	while(iter != word_list->end())// till the end of word list
+	while(iter != word_list.end())// till the end of word list
 	{
 		// start with '<' or '>' or '|' or '&' is wrong
 		if((strcmp(*iter, "<") == 0) || (strcmp(*iter, ">") == 0) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
@@ -27,7 +27,7 @@ int parser(list<char*>* word_list, list<Command*>* command_list)
 		command = new Command;
 		if(command == NULL)
 			return(-1);
-		if(command_list->empty())// first command, input is stdin
+		if(command_list.empty())// first command, input is stdin
 		{
 			if(str_copy(command->input, "stdin") != 0)
 				return(-1);
@@ -45,13 +45,13 @@ int parser(list<char*>* word_list, list<Command*>* command_list)
 			return(-1);
 		temp_list.push_back(temp_string);
 		iter++;
-		while(iter != word_list->end())// work until the end of word list
+		while(iter != word_list.end())// work until the end of word list
 		{
 			if(strcmp(*iter, "<") == 0)// reopen input
 			{
 				iter++;
 				// must have input name(not "|" or "&") next to '<'
-				if((iter == word_list->end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
+				if((iter == word_list.end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
 				{
 					printf("Invalid input file name!\n");
 					return(-1);
@@ -64,7 +64,7 @@ int parser(list<char*>* word_list, list<Command*>* command_list)
 			{
 				iter++;
 				// must have output name(not "|" or "&") next to '<'
-				if((iter == word_list->end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
+				if((iter == word_list.end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
 				{
 					printf("Invalid output file name!\n");
 					return(-1);
@@ -78,20 +78,20 @@ int parser(list<char*>* word_list, list<Command*>* command_list)
 				if(str_copy(command->output, "pipe") != 0)
 					return(-1);
 				iter++;
-				if((iter == word_list->end()) || (strcmp(*iter, "&") !=0))// the end of word list or next is not "&"
+				if((iter == word_list.end()) || (strcmp(*iter, "&") !=0))// the end of word list or next is not "&"
 				{
 					break;// end of command, so break
 				}
 			}
 			else if(strcmp(*iter, "&") == 0)// bg, the end of all commands
 			{
-				for(list<Command*>::iterator i=command_list->begin();i!=command_list->end();i++)
+				for(list<Command*>::iterator i=command_list.begin();i!=command_list.end();i++)
 				{
 					(*i)->bl_background = true;
 					log_debug("%s is changed to %s", (*i)->name, (*i)->bl_background ? "background":"foreground");
 				}
 				command->bl_background = true;
-				iter = word_list->end();
+				iter = word_list.end();
 				break;
 			}
 			else// coefficients
@@ -112,7 +112,7 @@ int parser(list<char*>* word_list, list<Command*>* command_list)
 				return(-1);
 		}
 		command->coeff_list[num] = NULL;// set the end of coeff_list to NULL
-		command_list->push_back(command);// push the command to the command list
+		command_list.push_back(command);// push the command to the command list
 
 		// log print
 		log_debug("A command is added to command list!");

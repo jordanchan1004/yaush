@@ -2,13 +2,8 @@
 
 int main()
 {
-	char* line_read;
-	list<char*> word_list;
-	list<Command*> command_list;
-	Job fg_job;
-	list<Job*> bg_jobs;
-
 	int flag;
+	custom_command_init();
 
 	for(;;)
 	{
@@ -18,15 +13,24 @@ int main()
 			printf("\n");
 			break;
 		}
-		else
+		else if(*line_read)
 		{
-			flag = lexer(line_read, &word_list);
+			flag = lexer();
 			if(flag == 0)
 			{
-				flag = parser(&word_list, &command_list);
+				flag = parser();
 				if(flag == 0)
 				{
-					flag = cmd_execute(&command_list, line_read, &fg_job, &bg_jobs);
+					flag = custom_command();
+					if(flag == -1)// not find custom command
+					{
+						flag = cmd_execute();
+					}
+					else if(flag == 1)// exit
+					{
+						break;
+					}
+					check_bg_list();
 				}
 			}
 		}
