@@ -1,2 +1,6 @@
 2014-06-11
 完成ReadLine.cpp、Lexer.cpp、Parser.cpp及相应的头文件。
+
+2014-06-12
+1、Parser.cpp添加对后台执行"&"的判断；
+2、完成CmdExecute.cpp及相应的头文件；

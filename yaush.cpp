@@ -5,6 +5,9 @@ int main()
 	char* line_read;
 	list<char*> word_list;
 	list<Command*> command_list;
+	Job fg_job;
+	list<Job*> bg_jobs;
+
 	int flag;
 
 	for(;;)
@@ -17,29 +20,14 @@ int main()
 		}
 		else
 		{
-			lexer(line_read, &word_list);
-			for(list<char*>::iterator iter=word_list.begin();iter!=word_list.end();iter++)
-			{
-				printf("%s\n",*iter);
-			}
-			flag = parser(&word_list, &command_list);
+			flag = lexer(line_read, &word_list);
 			if(flag == 0)
 			{
-				for(list<Command*>::iterator iter=command_list.begin();iter!=command_list.end();iter++)
+				flag = parser(&word_list, &command_list);
+				if(flag == 0)
 				{
-					printf("name: %s\n", (*iter)->name);
-					printf("coeff num: %d\n", (*iter)->coeff_num);
-					printf("coeff list:\t");
-					for(int i=0;i<(*iter)->coeff_num;i++)
-					{
-						printf("%s\t",(*iter)->coeff_list[i]);
-					}
-					printf("\nin: %s\nout: %s\n\n",(*iter)->input,(*iter)->output);
+					flag = cmd_execute(&command_list, line_read, &fg_job, &bg_jobs);
 				}
-			}
-			else
-			{
-				printf("Wrong input!\n");
 			}
 		}
 	}

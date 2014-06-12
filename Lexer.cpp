@@ -42,5 +42,11 @@ int lexer(char* line, list<char*>* word_list)
 		}
 	}
 
+	// log print
+	for(list<char*>::iterator iter=word_list->begin();iter!=word_list->end();iter++)
+	{
+		log_debug("%s",*iter);
+	}
+
 	return(0);
 }

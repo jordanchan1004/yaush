@@ -5,6 +5,9 @@
 #include <string.h>
 #include <list>
 
+#include "LogDebug.h"
+#include "Definition.h"
+
 using namespace std;
 
 #define SEPARATOR ' '
