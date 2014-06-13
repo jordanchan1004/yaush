@@ -2,6 +2,7 @@
 #define YAUSH_H
 
 #include <stdio.h>
+#include <setjmp.h>
 #include <iostream>
 
 #include "LogDebug.h"
@@ -11,6 +12,7 @@
 #include "Parser.h"
 #include "CmdExecute.h"
 #include "CustomCommand.h"
+#include "Shortcut.h"
 
 using namespace std;
 
@@ -19,5 +21,7 @@ list<char*> word_list;
 list<Command*> command_list;
 Job* fg_job=NULL;
 list<Job*> bg_jobs;
+sigjmp_buf jmpbuf_ctrlz;
+sigjmp_buf jmpbuf_ctrlc;
 
 #endif

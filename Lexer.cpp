@@ -29,7 +29,7 @@ int lexer()
 		word = new char[word_len + 1];// allocate new space for word
 		if(word == NULL)// failed
 		{
-			perror("Allocate failed");
+			perror("yaush: Allocate for char* failed");
 			return(-1);
 		}
 		strncpy(word, pos_pre, word_len);// copy
@@ -43,6 +43,7 @@ int lexer()
 	}
 
 	// log print
+	log_debug("Word list get from line read:");
 	for(list<char*>::iterator iter=word_list.begin();iter!=word_list.end();iter++)
 	{
 		log_debug("%s",*iter);

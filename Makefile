@@ -2,7 +2,8 @@ SRCS = $(wildcard *.cpp)
 OBJECTS = $(SRCS:.cpp=.o)
 TARGETS = yaush
 CXX = g++
-CXXFLAGS = -Wall -DDEBUG -g3
+#CXXFLAGS = -Wall -DDEBUG -g3
+CXXFLAGS = -Wall
 LFLAGS = -lreadline
 
 .PHONY: all clean

@@ -1,6 +1,7 @@
 #ifndef DEFINITION_H
 #define DEFINITION_H
 
+#include <stdio.h>
 #include <list>
 
 using namespace std;

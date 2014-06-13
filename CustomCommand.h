@@ -15,7 +15,7 @@
 
 using namespace std;
 
-#define CUSTOM_CMD_NUM 4
+#define CUSTOM_CMD_NUM 5
 
 extern list<Command*> command_list;
 extern Job* fg_job;
@@ -28,6 +28,8 @@ int custom_cd(char** argv);
 int custom_jobs(char** argv);
 
 int custom_fg(char** argv);
+
+int custom_bg(char** argv);
 
 int custom_command_init();
 

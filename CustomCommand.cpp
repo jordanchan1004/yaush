@@ -6,7 +6,7 @@ const char* custom_command_list[] =
 	"cd",
 	"jobs",
 	"fg",
-//	"bg"
+	"bg"
 };
 
 int (*fn[])(char**) = 
@@ -14,7 +14,8 @@ int (*fn[])(char**) =
 	custom_exit,
 	custom_cd,
 	custom_jobs,
-	custom_fg
+	custom_fg,
+	custom_bg
 };
 
 map<string, int> custom_command_map;
@@ -32,7 +33,7 @@ int custom_cd(char** argv)
 	int r_val = chdir(path);
 	if(r_val == -1)
 	{
-		perror("cd: ");
+		perror("yaush: cd");
 		return(-1);
 	}
 	else
@@ -74,62 +75,144 @@ int custom_fg(char** argv)
 	char* idx_str = argv[1];
 	if(idx_str == NULL)// no efficient
 	{
-		printf("fg: please specify number for fg\n");
+		printf("yaush: fg: Please specify a number for fg\n");
 		return(-1);
 	}
 	int idx = atoi(idx_str);
-	if(idx <= 0)
+	if((idx <= 0) || (idx > (int)bg_jobs.size()))// index invalid
 	{
-		printf("fg: number must be positive!\n");
-		return(-1);
-	}
-	if(idx > (int)bg_jobs.size())// idx bigger than bg_jobs's size
-	{
-		printf("fg: number too big!\n");
+		printf("yaush: fg: Index for fg is invalid!\n");
 		return(-1);
 	}
 	list<Job*>::iterator iter = bg_jobs.begin();
 	for(int i=1;i<idx;i++,iter++);// move to the idx entry
 	if((*iter)->status == Finished)// job finished, cannot fg
 	{
-		printf("fg: job %d is finished!\n", idx);
+		printf("yaush: fg: Job %d is finished!\n", idx);
 		return(-1);
 	}
 	else if(((*iter)->status == Running) || ((*iter)->status == Stopped))// job running or stopped
 	{
-		if((*iter)->status == Stopped)// job stopped, need to be resume
-		{
-			// To do
-		}
 		if(fg_job != NULL)
 		{
 			delete fg_job;
 			fg_job = NULL;
 		}
 		fg_job = new Job;
-		swap((*iter)->pid_list, fg_job->pid_list);
-		str_copy(fg_job->content, (*iter)->content);
-		bg_jobs.erase(iter);
-		fg_job->status = Running;
-		list<int>::iterator pid_temp;
-		for(list<int>::iterator iter=(fg_job->pid_list).begin();iter!=(fg_job->pid_list).end();)// while pid list not empty
+		swap((*iter)->pid_list, fg_job->pid_list);// copy pid_list
+		str_copy(fg_job->content, (*iter)->content);// copy content
+		bg_jobs.erase(iter);// remove this job from bg_jobs
+		if((*iter)->status == Stopped)// job stopped, need to be resume
 		{
-			int pid=*iter, status, r_val;
-			r_val = waitpid(pid,&status,0);// wait pid to exit
-			if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))
+			// tell all the process in pid_list to continue 
+			list<int>* pid_list = &(fg_job->pid_list);
+			log_debug("The size of pid_list of the job is: %lu", pid_list->size());
+			for(list<int>::iterator i=pid_list->begin();i!=pid_list->end();i++)
 			{
-				pid_temp = iter;
-				iter++;
+				int r_val = kill(*i, SIGCONT);
+				if((r_val == -1) && (errno != ESRCH))
+				{
+					perror("Tell one pid of stopped job failed");
+				}
+			}
+		}
+		fg_job->status = Running;// set fg_job running
+		// wait for all pid in fg_job to finish
+		list<int>::iterator pid_temp;
+		for(list<int>::iterator i=(fg_job->pid_list).begin();i!=(fg_job->pid_list).end();)// while pid list not empty
+		{
+			int pid=*i, status, r_val;
+			r_val = waitpid(pid,&status,0);// wait pid to exit
+			if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))// 
+			{
+				pid_temp = i;
+				i++;
 				(fg_job->pid_list).erase(pid_temp);
+			}
+			else
+			{
+				perror("yaush: fg: Unexpected error with waitpid");
 			}
 		}
 		delete fg_job;
 		fg_job = NULL;
 		return(0);
 	}
-	else
+	else// for other future status of job
 	{
 		return(-1);
+	}
+}
+
+int custom_bg(char** argv)
+{
+	if(argv[1] == NULL)// no coeffs, found the last stopped job
+	{
+		list<Job*>::reverse_iterator iter;
+		int cnt = bg_jobs.size();
+		for(iter=bg_jobs.rbegin();iter!=bg_jobs.rend();iter++,cnt--)
+		{
+			if((*iter)->status == Stopped)// found one
+			{
+				// tell all the process in pid_list to continue 
+				list<int>* pid_list = &((*iter)->pid_list);
+				log_debug("The size of pid_list of the job is: %lu", pid_list->size());
+				for(list<int>::iterator i=pid_list->begin();i!=pid_list->end();i++)
+				{
+					int r_val = kill(*i, SIGCONT);
+					if((r_val == -1) && (errno != ESRCH))
+					{
+						perror("Tell one pid of stopped job failed");
+					}
+				}
+				(*iter)->status = Running;// set the status back to running
+				printf("[%d] %s\n", cnt, (*iter)->content);
+				return(0);
+			}
+		}
+		// no job is stopped
+		printf("yaush: bg: No jobs stopped found!\n");
+		return(-1);
+	}
+	else// with coeff
+	{
+		int idx = atoi(argv[1]);
+		if((idx <= 0) || (idx > (int)bg_jobs.size()))// index invalid
+		{
+			printf("yaush: bg: Index for bg is invalid!\n");
+			return(-1);
+		}
+		log_debug("The size of bg_jobs is: %lu", bg_jobs.size());
+		list<Job*>::iterator iter = bg_jobs.begin();
+		for(int i=1;i<idx;i++,iter++);// move to the idx entry
+		Job* target = (*iter);
+		if(target->status == Finished)// job finished
+		{
+			printf("yaush: bg: Job %d is finished!\n", idx);
+			return(-1);
+		}
+		else if(target->status == Running)// job running
+		{
+			printf("yaush: bg: Job %d is running!\n", idx);
+			return(-1);
+		}
+		else// job stopped
+		{
+			// tell all the process in pid_list to continue 
+			list<int>* pid_list = &(target->pid_list);
+			log_debug("The size of pid_list of the job is: %lu", pid_list->size());
+			for(list<int>::iterator i=pid_list->begin();i!=pid_list->end();i++)
+			{
+				int r_val = kill(*i, SIGCONT);
+				if((r_val == -1) && (errno != ESRCH))
+				{
+					perror("Tell one pid of stopped job failed");
+				}
+			}
+			target->status = Running;
+			printf("[%d] %s\n", idx, target->content);
+			return(0);
+		}
 	}
 }
 

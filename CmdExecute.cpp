@@ -10,7 +10,7 @@ int cmd_execute()
 	Job* job = new Job;// new Job
 	if(job == NULL)// allocate failed
 	{
-		perror("Allocate for job failed");
+		perror("yaush: Allocate for job failed");
 		return(-1);
 	}
 	if(str_copy(job->content, line_read) != 0)
@@ -52,7 +52,7 @@ int cmd_execute()
 				int fid = open((*iter)->input, O_RDONLY);
 				if(fid == -1)
 				{
-					fprintf(stderr,"Open file %s failed: %s\n", (*iter)->input, strerror(errno));
+					fprintf(stderr,"yaush: Open file %s for read failed: %s\n", (*iter)->input, strerror(errno));
 					exit(-1);
 				}
 				dup2(fid, STDIN_FILENO);
@@ -70,7 +70,7 @@ int cmd_execute()
 				int fid = open((*iter)->output, O_WRONLY|O_CREAT|O_TRUNC, 0664);
 				if(fid == -1)
 				{
-					fprintf(stderr,"Open file %s failed: %s\n", (*iter)->input, strerror(errno));
+					fprintf(stderr,"yaush: Open file %s for write failed: %s\n", (*iter)->input, strerror(errno));
 					exit(-1);
 				}
 				dup2(fid, STDOUT_FILENO);
@@ -80,15 +80,14 @@ int cmd_execute()
 			int flag = execvp((*iter)->name, (*iter)->coeff_list);// execute
 			if(flag == -1)// failed
 			{
-				fprintf(stderr, "%s: %s\n", (*iter)->name, strerror(errno));
+				fprintf(stderr, "yaush: %s: %s\n", (*iter)->name, strerror(errno));
 			}
 
-			log_debug("execvp return: %d", flag);
 			exit(-1);// child must stop
 		}
 		else// fork failed
 		{
-			perror("Fork failed");
+			perror("yaush: Fork failed");
 			return(-1);
 		}
 	}
@@ -111,6 +110,10 @@ int cmd_execute()
 				pid_temp = iter;
 				iter++;
 				(fg_job->pid_list).erase(pid_temp);
+			}
+			else
+			{
+				perror("yaush: Unexpected error with waitpid");
 			}
 		}
 		delete fg_job;
@@ -158,7 +161,7 @@ int check_bg_list()
 				{
 					if(r_val > 0)// return successfully
 					{
-						log_debug("Process %d is waited successfully, return value: %d", pid, r_val);
+						log_debug("Process %d is waited successfully", pid);
 					}
 					else if(errno == ECHILD)// pid not found
 					{
@@ -166,7 +169,7 @@ int check_bg_list()
 					}
 					else// other error
 					{
-						perror("Unexpected error with waitpid");
+						perror("yaush: Unexpected error with waitpid");
 					}
 					pid_temp = j;// store j to temp
 					j++;// move to next
@@ -178,12 +181,12 @@ int check_bg_list()
 				(*i)->status = Finished;// set the status of this job to be finished
 				if(bg)// this time is background command, not remove this job
 				{
-					printf("[%d] finished\t%s\n", cnt, (*i)->content);// print information
+					printf("[%d] finished\t\t%s\n", cnt, (*i)->content);// print information
 					i++;
 				}
 				else// this time is foreground command, remove this job
 				{
-					printf("[%d]+ finished\t%s\n", cnt, (*i)->content);// print information
+					printf("[%d] finished\t\t%s\n", cnt, (*i)->content);// print information
 					job_temp = i;
 					i++;
 					bg_jobs.erase(job_temp);

@@ -21,7 +21,7 @@ int parser()
 		// start with '<' or '>' or '|' or '&' is wrong
 		if((strcmp(*iter, "<") == 0) || (strcmp(*iter, ">") == 0) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
 		{
-			printf("Invalid command!\n");
+			printf("yaush: Invalid command!\n");
 			return(-1);
 		}
 		command = new Command;
@@ -53,7 +53,7 @@ int parser()
 				// must have input name(not "|" or "&") next to '<'
 				if((iter == word_list.end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
 				{
-					printf("Invalid input file name!\n");
+					printf("yaush: Invalid input file name!\n");
 					return(-1);
 				}
 				if(str_copy(command->input, *iter) != 0)
@@ -66,7 +66,7 @@ int parser()
 				// must have output name(not "|" or "&") next to '<'
 				if((iter == word_list.end()) || (strcmp(*iter, "|") == 0) || (strcmp(*iter, "&") == 0))
 				{
-					printf("Invalid output file name!\n");
+					printf("yaush: Invalid output file name!\n");
 					return(-1);
 				}
 				if(str_copy(command->output, *iter) != 0)
@@ -88,7 +88,6 @@ int parser()
 				for(list<Command*>::iterator i=command_list.begin();i!=command_list.end();i++)
 				{
 					(*i)->bl_background = true;
-					log_debug("%s is changed to %s", (*i)->name, (*i)->bl_background ? "background":"foreground");
 				}
 				command->bl_background = true;
 				iter = word_list.end();
@@ -137,7 +136,7 @@ int str_copy(char* &dst, const char* src)
 	dst = new char[len + 1];
 	if(dst == NULL)
 	{
-		perror("Allocate char* failed");
+		perror("yaush: Allocate for char* failed");
 		return(-1);
 	}
 	strncpy(dst, src, len);

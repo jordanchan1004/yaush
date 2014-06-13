@@ -4,6 +4,14 @@ int main()
 {
 	int flag;
 	custom_command_init();
+	bind_shortcut();
+
+	if(sigsetjmp(jmpbuf_ctrlz,1) != 0)
+	{
+	}
+	if(sigsetjmp(jmpbuf_ctrlc,1) != 0)
+	{
+	}
 
 	for(;;)
 	{
@@ -28,6 +36,7 @@ int main()
 					}
 					else if(flag == 1)// exit
 					{
+						check_bg_list();
 						break;
 					}
 					check_bg_list();
