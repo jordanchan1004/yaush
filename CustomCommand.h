@@ -15,11 +15,15 @@
 
 using namespace std;
 
-#define CUSTOM_CMD_NUM 5
+#define CUSTOM_CMD_NUM 7
 
 extern list<Command*> command_list;
 extern Job* fg_job;
 extern list<Job*> bg_jobs;
+
+int custom_about(char** argv);
+
+int custom_why(char** argv);
 
 int custom_exit(char** argv);
 

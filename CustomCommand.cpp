@@ -2,6 +2,8 @@
 
 const char* custom_command_list[] = 
 {
+	"about",
+	"why",
 	"exit",
 	"cd",
 	"jobs",
@@ -11,6 +13,8 @@ const char* custom_command_list[] =
 
 int (*fn[])(char**) = 
 {
+	custom_about,
+	custom_why,
 	custom_exit,
 	custom_cd,
 	custom_jobs,
@@ -18,7 +22,39 @@ int (*fn[])(char**) =
 	custom_bg
 };
 
+const char* answer_list[] =
+{
+	"This is written for another unix shell.\n",
+	"Because this is the project of the course named C/UNIX.\n",
+	"In order to strengthen my program skills.\n",
+	"That's because I want to be good at my job in the future.\n",
+	"Money comes from good job.\n",
+	"Girls like money.\n",
+	"How can I know?!\n",
+	"Don't ask!\n"
+};
+
+int answer_index = 0;
+
 map<string, int> custom_command_map;
+
+int custom_about(char** argv)
+{
+	printf("-----------------------------------------------\n");
+	printf("This is yaush: Yet another unix shell.\n");
+	printf("Author: Edit by Jordan(Chen Hongzhao).\n");
+	printf("Date: 2014-06-14.\n");
+	printf("Website: https://github.com/jordanchan1004/.\n");
+	printf("-----------------------------------------------\n");
+	return(0);
+}
+
+int custom_why(char** argv)
+{
+	printf("%s",answer_list[answer_index]);
+	answer_index = (answer_index + 1) % 8;
+	return(0);
+}
 
 int custom_exit(char** argv)
 {
