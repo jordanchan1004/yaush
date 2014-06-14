@@ -44,8 +44,6 @@ int cmd_execute()
 			if(strcmp((*iter)->input, "pipe") == 0)// input is pipe
 			{
 				dup2(fd[i-1][0], STDIN_FILENO);
-				close(fd[i-1][0]);
-				close(fd[i-1][1]);
 			}
 			else if(strcmp((*iter)->input, "stdin") != 0)// input is file
 			{
@@ -62,8 +60,6 @@ int cmd_execute()
 			if(strcmp((*iter)->output, "pipe") == 0)// output is pipe
 			{
 				dup2(fd[i][1], STDOUT_FILENO);
-				close(fd[i][0]);
-				close(fd[i][1]);
 			}
 			else if(strcmp((*iter)->output, "stdout") != 0)// output is file
 			{
@@ -75,6 +71,12 @@ int cmd_execute()
 				}
 				dup2(fid, STDOUT_FILENO);
 				close(fid);
+			}
+
+			for(int j=0;j<pipe_num;j++)
+			{
+				close(fd[j][0]);
+				close(fd[j][1]);
 			}
 
 			int flag = execvp((*iter)->name, (*iter)->coeff_list);// execute
