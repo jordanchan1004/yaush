@@ -113,8 +113,17 @@ int parser()
 		command->coeff_list[num] = NULL;// set the end of coeff_list to NULL
 		command_list.push_back(command);// push the command to the command list
 
-		// log print
-		log_debug("A command is added to command list!");
+		command = NULL;// set command to NULL
+		temp_list.clear();// clear the temp_list
+	}
+	
+	// log print
+	log_debug("Totally %lu commands is found!", command_list.size());
+	int cnt = 1;
+	for(list<Command*>::iterator iter=command_list.begin();iter!=command_list.end();iter++,cnt++)
+	{
+		Command* command = (*iter);
+		log_debug("Command %d:", cnt);
 		log_debug("Command name is: %s", command->name);
 		log_debug("Command coeffs:");
 		for(int i=0;i<command->coeff_num;i++)
@@ -122,9 +131,6 @@ int parser()
 		log_debug("Input is: %s", command->input);
 		log_debug("Output is: %s", command->output);
 		log_debug("Background: %s", command->bl_background ? "yes":"no");
-
-		command = NULL;// set command to NULL
-		temp_list.clear();// clear the temp_list
 	}
 
 	return(0);

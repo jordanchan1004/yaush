@@ -28,8 +28,11 @@ int custom_exit(char** argv)
 int custom_cd(char** argv)
 {
 	char* path = argv[1];
-	if(path == NULL)
-		return(0);
+	if((path == NULL) || (strcmp(path, "~") == 0))// no coeff or coeff is "~"
+	{
+		path = new char[100];
+		snprintf(path, 100, "/home/%s/", getenv("USER"));
+	}
 	int r_val = chdir(path);
 	if(r_val == -1)
 	{
@@ -73,19 +76,28 @@ int custom_jobs(char** argv)
 int custom_fg(char** argv)
 {
 	char* idx_str = argv[1];
-	if(idx_str == NULL)// no efficient
+	int idx;
+	if(idx_str == NULL)// no coefficient
 	{
-		printf("yaush: fg: Please specify a number for fg\n");
-		return(-1);
+		idx = (int)bg_jobs.size();// idx set to the last job index
+		if(idx == 0)
+		{
+			printf("yaush: fg: No background process!\n");
+			return(-1);
+		}
 	}
-	int idx = atoi(idx_str);
-	if((idx <= 0) || (idx > (int)bg_jobs.size()))// index invalid
+	else// have coefficient
 	{
-		printf("yaush: fg: Index for fg is invalid!\n");
-		return(-1);
+		idx = atoi(idx_str);// idx get from argv[1]
+		if((idx <= 0) || (idx > (int)bg_jobs.size()))// index invalid
+		{
+			printf("yaush: fg: Index for fg is invalid!\n");
+			return(-1);
+		}
 	}
 	list<Job*>::iterator iter = bg_jobs.begin();
 	for(int i=1;i<idx;i++,iter++);// move to the idx entry
+
 	if((*iter)->status == Finished)// job finished, cannot fg
 	{
 		printf("yaush: fg: Job %d is finished!\n", idx);
@@ -93,15 +105,11 @@ int custom_fg(char** argv)
 	}
 	else if(((*iter)->status == Running) || ((*iter)->status == Stopped))// job running or stopped
 	{
-		if(fg_job != NULL)
-		{
-			delete fg_job;
-			fg_job = NULL;
-		}
 		fg_job = new Job;
 		swap((*iter)->pid_list, fg_job->pid_list);// copy pid_list
 		str_copy(fg_job->content, (*iter)->content);// copy content
 		bg_jobs.erase(iter);// remove this job from bg_jobs
+		printf("%s\n", (*iter)->content);
 		if((*iter)->status == Stopped)// job stopped, need to be resume
 		{
 			// tell all the process in pid_list to continue 
@@ -123,16 +131,21 @@ int custom_fg(char** argv)
 		{
 			int pid=*i, status, r_val;
 			r_val = waitpid(pid,&status,0);// wait pid to exit
-			if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))// 
+			if(r_val > 0)// return successfully
 			{
-				pid_temp = i;
-				i++;
-				(fg_job->pid_list).erase(pid_temp);
+				log_debug("Foreground: Process %d is waited successfully", pid);
 			}
-			else
+			else if(errno == ECHILD)// pid not found
 			{
-				perror("yaush: fg: Unexpected error with waitpid");
+				log_debug("Foreground: Process %d cannot found!", pid);
 			}
+			else// other error
+			{
+				perror("yaush: Foreground: Unexpected error with waitpid");
+			}
+			pid_temp = i;
+			i++;
+			(fg_job->pid_list).erase(pid_temp);
 		}
 		delete fg_job;
 		fg_job = NULL;

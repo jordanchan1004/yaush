@@ -32,21 +32,28 @@ void ctrlc_catcher(int signo, siginfo_t* info, void* ctx)
 	if(fg_job)// if Ctrl-C is called when foreground job running
 	{
 		list<int>::iterator pid_temp;
+		log_debug("Ctrl-C: Foreground: Size of pid_list is: %lu", (fg_job->pid_list).size());
 		for(list<int>::iterator i=(fg_job->pid_list).begin();i!=(fg_job->pid_list).end();)
 		{
 			//kill(*i, SIGINT);
 			int pid=*i, status, r_val;
+			log_debug("Ctrl-C: Foreground: The pid waiting for is: %d", pid);
 			r_val = waitpid(pid,&status,0);// wait pid to exit
-			if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))// 
+			if(r_val > 0)// return successfully
 			{
-				pid_temp = i;
-				i++;
-				(fg_job->pid_list).erase(pid_temp);
+				log_debug("Ctrl-C: Foreground: Process %d is waited successfully", pid);
 			}
-			else
+			else if(errno == ECHILD)// pid not found
 			{
-				perror("yaush: fg: Unexpected error with waitpid");
+				log_debug("Ctrl-C: Foreground: Process %d cannot found!", pid);
 			}
+			else// other error
+			{
+				perror("yaush: Ctrl-C: Foreground: Unexpected error with waitpid");
+			}
+			pid_temp = i;
+			i++;
+			(fg_job->pid_list).erase(pid_temp);
 		}
 		delete fg_job;// delete fg_job
 		fg_job = NULL;
@@ -54,35 +61,41 @@ void ctrlc_catcher(int signo, siginfo_t* info, void* ctx)
 	}
 
 	list<Job*>::iterator job_temp;
+	log_debug("Ctrl-C: Background: Size of bg_jobs is: %lu", bg_jobs.size());
 	for(list<Job*>::iterator i=bg_jobs.begin();i!=bg_jobs.end();)
 	{
-		if((*i)->status == Running)
+		if(((*i)->status == Running) || ((*i)->status == Stopped))
 		{
 			list<int>* pid_list = &((*i)->pid_list);
 			list<int>::iterator pid_temp;
+			log_debug("Ctrl-C: Background: Job status is: %s", ((*i)->status == Running ? "Running" : "Stopped"));
+			log_debug("Ctrl-C: Background: Size of pid_list is: %lu", pid_list->size());
 			for(list<int>::iterator j=pid_list->begin();j!=pid_list->end();)
 			{
 				int pid=*j, status, r_val;
+				kill(pid, SIGKILL);
+				log_debug("Ctrl-C: Background: The pid %d is killed and waiting for", pid);
 				r_val = waitpid(pid,&status,0);// wait pid to exit
-				if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))// 
+				if(r_val > 0)// return successfully
 				{
-					pid_temp = j;
-					j++;
-					pid_list->erase(pid_temp);
+					log_debug("Ctrl-C: Background: Process %d is waited successfully", pid);
 				}
-				else
+				else if(errno == ECHILD)// pid not found
 				{
-					perror("yaush: fg: Unexpected error with waitpid");
+					log_debug("Ctrl-C: Background: Process %d cannot found!", pid);
 				}
+				else// other error
+				{
+					perror("yaush: Ctrl-C: Background: Unexpected error with waitpid");
+				}
+				pid_temp = j;
+				j++;
+				pid_list->erase(pid_temp);
 			}
-			job_temp = i;
-			i++;
-			bg_jobs.erase(job_temp);
 		}
-		else
-		{
-			i++;
-		}
+		job_temp = i;
+		i++;
+		bg_jobs.erase(job_temp);
 	}
 
 	siglongjmp(jmpbuf_ctrlc, 1);

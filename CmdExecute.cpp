@@ -44,6 +44,7 @@ int cmd_execute()
 			if(strcmp((*iter)->input, "pipe") == 0)// input is pipe
 			{
 				dup2(fd[i-1][0], STDIN_FILENO);
+				log_debug("Command %d dup2 pipe to STDIN_FILENO", i+1);
 			}
 			else if(strcmp((*iter)->input, "stdin") != 0)// input is file
 			{
@@ -54,12 +55,14 @@ int cmd_execute()
 					exit(-1);
 				}
 				dup2(fid, STDIN_FILENO);
+				log_debug("Command %d dup2 %s to STDIN_FILENO", i+1, (*iter)->input);
 				close(fid);
 			}
 
 			if(strcmp((*iter)->output, "pipe") == 0)// output is pipe
 			{
 				dup2(fd[i][1], STDOUT_FILENO);
+				log_debug("Command %d dup2 pipe to STDOUT_FILENO", i+1);
 			}
 			else if(strcmp((*iter)->output, "stdout") != 0)// output is file
 			{
@@ -70,6 +73,7 @@ int cmd_execute()
 					exit(-1);
 				}
 				dup2(fid, STDOUT_FILENO);
+				log_debug("Command %d dup2 %s to STDOUT_FILENO", i+1, (*iter)->output);
 				close(fid);
 			}
 
@@ -107,16 +111,21 @@ int cmd_execute()
 		{
 			int pid=*iter, status, r_val;
 			r_val = waitpid(pid,&status,0);// wait pid to exit
-			if((r_val > 0) || ((r_val == -1) && (errno == ECHILD)))
+			if(r_val > 0)// return successfully
 			{
-				pid_temp = iter;
-				iter++;
-				(fg_job->pid_list).erase(pid_temp);
+				log_debug("Foreground: Process %d is waited successfully", pid);
 			}
-			else
+			else if(errno == ECHILD)// pid not found
 			{
-				perror("yaush: Unexpected error with waitpid");
+				log_debug("Foreground: Process %d cannot found!", pid);
 			}
+			else// other error
+			{
+				perror("yaush: Foreground: Unexpected error with waitpid");
+			}
+			pid_temp = iter;
+			iter++;
+			(fg_job->pid_list).erase(pid_temp);
 		}
 		delete fg_job;
 		fg_job = NULL;
@@ -163,15 +172,15 @@ int check_bg_list()
 				{
 					if(r_val > 0)// return successfully
 					{
-						log_debug("Process %d is waited successfully", pid);
+						log_debug("Backgroud: Process %d is waited successfully", pid);
 					}
 					else if(errno == ECHILD)// pid not found
 					{
-						log_debug("Process %d cannot found!", pid);
+						log_debug("Background: Process %d cannot found!", pid);
 					}
 					else// other error
 					{
-						perror("yaush: Unexpected error with waitpid");
+						perror("yaush: Background: Unexpected error with waitpid");
 					}
 					pid_temp = j;// store j to temp
 					j++;// move to next
